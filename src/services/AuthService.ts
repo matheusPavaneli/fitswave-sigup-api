@@ -31,31 +31,6 @@ class AuthService implements IAuthService {
 
     return user;
   };
-
-  resetPassword = async (
-    identifier: string,
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<User> => {
-    const user =
-      (await this.UserRepository.findUserByEmail(identifier)) ??
-      (await this.UserRepository.findUserByUsername(identifier));
-
-    if (!user) {
-      throw new BadRequestError('Usuário não encontrado!');
-    }
-
-    const isPasswordMatch = await user.comparePassword(oldPassword);
-
-    if (!isPasswordMatch) {
-      throw new BadRequestError('A senha antiga está incorreta!');
-    }
-
-    user.password = newPassword;
-    await user.save();
-
-    return user;
-  };
 }
 
 export default AuthService;

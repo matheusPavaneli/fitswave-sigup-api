@@ -3,7 +3,7 @@ import express, { Application } from 'express';
 import dotenv from 'dotenv';
 
 import { errorHandler } from './middlewares/errorHandler';
-import registerRoutes from './routes/registerRoutes';
+import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 
 dotenv.config();
@@ -24,7 +24,7 @@ class App {
   }
 
   routes(): void {
-    this.app.use('/signup', registerRoutes);
+    this.app.use('/user', userRoutes);
     this.app.use('/auth', authRoutes);
   }
 

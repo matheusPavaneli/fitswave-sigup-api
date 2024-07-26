@@ -34,3 +34,20 @@ export class ForbiddenError extends ApiError {
     super(message, 403);
   }
 }
+export class NoContentError extends ApiError {
+  constructor(message: string) {
+    super(message, 400);
+  }
+}
+
+export class ConflictError extends ApiError {
+  constructor(message: string) {
+    super(message, 409);
+  }
+}
+
+export class InternalServerError extends ApiError {
+  constructor(message: string) {
+    super(message, 500);
+  }
+}
