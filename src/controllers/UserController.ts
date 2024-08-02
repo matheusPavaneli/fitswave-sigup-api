@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import IUserServiceClass from '../interfaces/IUserServiceClass';
-import { UnprocessableEntityError } from '../helpers/apiError';
+import { UnprocessableEntityError } from '../helpers/ApiError';
 import IUserResponse from '../interfaces/IUserResponse';
 import type ITokenService from '../interfaces/ITokenService';
 
@@ -15,7 +15,11 @@ class UserController {
   }
 
   createUser = async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
+    const {
+      username,
+      email,
+      password,
+    }: { username: string; email: string; password: string } = req.body;
 
     const newUser = await this.UserService.create({
       username,
@@ -24,13 +28,16 @@ class UserController {
     });
 
     if (!newUser) {
-      new UnprocessableEntityError('Não foi possível realizar o cadastro.');
+      new UnprocessableEntityError(
+        'Due to an internal error, registration was not possible.',
+      );
     }
 
     const responseData: IUserResponse = {
       status: 'success',
       data: {
         statusCode: 201,
+        message: 'You have successfully registered!',
         user: newUser,
       },
     };
@@ -53,7 +60,7 @@ class UserController {
     });
 
     if (updatedUser) {
-      const token = this.TokenService.getToken(updatedUser);
+      const token = this.TokenService.getLoginToken(updatedUser);
       res.set('authorization', token);
     }
 
@@ -61,6 +68,7 @@ class UserController {
       status: 'success',
       data: {
         statusCode: 200,
+        message: 'Your information has been updated successfully!',
         user: updatedUser,
       },
     };

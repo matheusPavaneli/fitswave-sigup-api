@@ -3,6 +3,7 @@ import IUserCreationData from '../interfaces/IUserCreationData';
 import IUserRepository from '../interfaces/IUserRepository';
 import type IUserUpdateData from '../interfaces/IUserUpdateData';
 import User from '../models/User';
+import type IConflictUser from '../interfaces/IConflictUser';
 
 class UserRepository implements IUserRepository {
   private UserModel: typeof User;
@@ -46,10 +47,10 @@ class UserRepository implements IUserRepository {
     return user;
   };
 
-  async findUserByUsernameOrEmail(
-    username: string,
-    email: string,
-  ): Promise<User | null> {
+  async findUserByUsernameOrEmail({
+    username,
+    email,
+  }: IConflictUser): Promise<User | null> {
     return User.findOne({
       where: {
         [Op.or]: [{ username }, { email }],

@@ -8,15 +8,19 @@ import ITokenService from '../interfaces/ITokenService';
 import User from '../models/User';
 
 class TokenService implements ITokenService {
-  getToken(data: User): string {
+  getLoginToken = (data: User): string => {
     const { username, email } = data;
 
     return jwt.sign({ username, email }, SECRET ?? 'default');
-  }
+  };
 
-  decodeToken(token: string): string | jwt.JwtPayload | null {
+  getResetPasswordToken = (email: string): string => {
+    return jwt.sign({ email }, SECRET ?? 'default', { expiresIn: '30m' });
+  };
+
+  decodeToken = (token: string): string | jwt.JwtPayload | null => {
     return jwt.decode(token);
-  }
+  };
 }
 
 export default TokenService;

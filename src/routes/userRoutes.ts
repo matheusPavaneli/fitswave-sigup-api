@@ -5,7 +5,7 @@ import User from '../models/User';
 import UserController from '../controllers/UserController';
 import UserRepository from '../repositories/UserRepository';
 import validateData from '../middlewares/validateData';
-import Validation from '../helpers/validation';
+import Validation from '../helpers/Validation';
 import TokenService from '../services/TokenService';
 
 const router = Router();

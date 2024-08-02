@@ -11,44 +11,18 @@ class Validation {
         ),
       )
       .required(),
+    repeatPassword: Joi.any().valid(Joi.ref('password')).required(),
   }).messages({
-    'any.required': 'O campo {{#label}} é obrigatório',
-    'string.empty': 'O campo {{#label}} não pode estar vazio',
-    'string.min': 'O campo {{#label}} deve ter no mínimo {#limit} caracteres',
-    'string.max': 'O campo {{#label}} deve ter no máximo {#limit} caracteres',
-    'string.email': 'O campo {{#label}} deve ser um endereço de email válido',
+    'any.required': 'The {{#label}} field is required',
+    'string.empty': 'The {{#label}} field cannot be empty',
+    'string.min': 'The {{#label}} field must have at least {#limit} characters',
+    'string.max': 'The {{#label}} field must have at most {#limit} characters',
+    'string.email': 'The {{#label}} field must be a valid email address',
+    'any.only': 'The confirmation password must match the password',
     'string.alphanum':
-      'O campo {{#label}} deve conter apenas caracteres alfanuméricos',
+      'The {{#label}} field must contain only alphanumeric characters',
     'string.pattern.base':
-      'Sua senha deve conter: no mínimo 8 caracteres de comprimento; pelo menos uma letra maiúscula; pelo menos uma letra minúscula; pelo menos um dígito; pelo menos um caractere especial;',
-  });
-
-  static passwordResetSchema = Joi.object({
-    identifier: Joi.alternatives()
-      .try(Joi.string().alphanum().min(3).max(30), Joi.string().email())
-      .required(),
-    oldPassword: Joi.string().required(),
-    newPassword: Joi.string()
-      .pattern(
-        new RegExp(
-          '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$',
-        ),
-      )
-      .required(),
-    repeatPassword: Joi.any().valid(Joi.ref('newPassword')).required(),
-  }).messages({
-    'alternatives.match':
-      'O campo {{#label}} deve ser um nome de usuário ou um email válido',
-    'any.required': 'O campo {{#label}} é obrigatório',
-    'string.empty': 'O campo {{#label}} não pode estar vazio',
-    'string.min': 'O campo {{#label}} deve ter no mínimo {#limit} caracteres',
-    'string.max': 'O campo {{#label}} deve ter no máximo {#limit} caracteres',
-    'string.email': 'O campo {{#label}} deve ser um endereço de email válido',
-    'string.alphanum':
-      'O campo {{#label}} deve conter apenas caracteres alfanuméricos',
-    'string.pattern.base':
-      'Sua senha deve conter: no mínimo 8 caracteres de comprimento; pelo menos uma letra maiúscula; pelo menos uma letra minúscula; pelo menos um dígito; pelo menos um caractere especial;',
-    'any.only': 'A confirmação da nova senha deve ser igual à nova senha',
+      'Your password must contain: at least 8 characters; at least one uppercase letter; at least one lowercase letter; at least one digit; at least one special character;',
   });
 
   static userLoginSchema = Joi.object({
@@ -64,37 +38,66 @@ class Validation {
       .required(),
   }).messages({
     'alternatives.match':
-      'O campo {{#label}} deve ser um nome de usuário ou um email válido',
-    'any.required': 'O campo {{#label}} é obrigatório',
-    'string.empty': 'O campo {{#label}} não pode estar vazio',
-    'string.min': 'O campo {{#label}} deve ter no mínimo {#limit} caracteres',
-    'string.max': 'O campo {{#label}} deve ter no máximo {#limit} caracteres',
-    'string.email': 'O campo {{#label}} deve ser um endereço de email válido',
+      'The {{#label}} field must be a valid username or email',
+    'any.required': 'The {{#label}} field is required',
+    'string.empty': 'The {{#label}} field cannot be empty',
+    'string.min': 'The {{#label}} field must have at least {#limit} characters',
+    'string.max': 'The {{#label}} field must have at most {#limit} characters',
+    'string.email': 'The {{#label}} field must be a valid email address',
     'string.alphanum':
-      'O campo {{#label}} deve conter apenas caracteres alfanuméricos',
+      'The {{#label}} field must contain only alphanumeric characters',
     'string.pattern.base':
-      'Sua senha deve conter: no mínimo 8 caracteres de comprimento; pelo menos uma letra maiúscula; pelo menos uma letra minúscula; pelo menos um dígito; pelo menos um caractere especial;',
+      'Your password must contain: at least 8 characters; at least one uppercase letter; at least one lowercase letter; at least one digit; at least one special character;',
   });
 
   static userUpdateSchema = Joi.object({
-    username: Joi.string().alphanum().min(3).max(30).optional().allow(''),
-    email: Joi.string().email().optional().allow(''),
+    username: Joi.string().alphanum().min(3).max(30).required(),
+    email: Joi.string().email().required(),
     password: Joi.string()
       .pattern(
         new RegExp(
           '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$',
         ),
       )
-      .optional()
-      .allow(''),
+      .required(),
   }).messages({
-    'string.min': 'O campo {{#label}} deve ter no mínimo {#limit} caracteres',
-    'string.max': 'O campo {{#label}} deve ter no máximo {#limit} caracteres',
-    'string.email': 'O campo {{#label}} deve ser um endereço de email válido',
+    'string.empty': 'The {{#label}} field cannot be empty',
+    'string.min': 'The {{#label}} field must have at least {#limit} characters',
+    'string.max': 'The {{#label}} field must have at most {#limit} characters',
+    'string.email': 'The {{#label}} field must be a valid email address',
+    'any.required': 'The {{#label}} field is required',
     'string.alphanum':
-      'O campo {{#label}} deve conter apenas caracteres alfanuméricos',
+      'The {{#label}} field must contain only alphanumeric characters',
     'string.pattern.base':
-      'Sua senha deve conter: no mínimo 8 caracteres de comprimento; pelo menos uma letra maiúscula; pelo menos uma letra minúscula; pelo menos um dígito; pelo menos um caractere especial;',
+      'Your password must contain: at least 8 characters; at least one uppercase letter; at least one lowercase letter; at least one digit; at least one special character;',
+  });
+
+  static requestResetPassword = Joi.object({
+    email: Joi.string().email().required(),
+  }).messages({
+    'string.empty': 'The {{#label}} field cannot be empty',
+    'string.email': 'The {{#label}} field must be a valid email address',
+    'any.required': 'The {{#label}} field is required',
+  });
+
+  static resetPassword = Joi.object({
+    oldPassword: Joi.string().required(),
+    newPassword: Joi.string()
+      .pattern(
+        new RegExp(
+          '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$',
+        ),
+      )
+      .required(),
+    repeatPassword: Joi.any().valid(Joi.ref('newPassword')).required(),
+  }).messages({
+    'any.required': 'The {{#label}} field is required',
+    'string.empty': 'The {{#label}} field cannot be empty',
+    'string.min': 'The {{#label}} field must have at least {#limit} characters',
+    'string.max': 'The {{#label}} field must have at most {#limit} characters',
+    'string.pattern.base':
+      'Your password must contain: at least 8 characters; at least one uppercase letter; at least one lowercase letter; at least one digit; at least one special character;',
+    'any.only': 'The confirmation password must match the new password',
   });
 }
 

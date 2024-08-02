@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config;
 
-import { ForbiddenError, UnauthorizedError } from '../helpers/apiError';
+import { ForbiddenError, UnauthorizedError } from '../helpers/ApiError';
 
 const { SECRET } = process.env;
 

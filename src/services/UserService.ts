@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+
 import IUserCreationData from '../interfaces/IUserCreationData';
 import IUserRepository from '../interfaces/IUserRepository';
 import IUserServiceClass from '../interfaces/IUserServiceClass';
@@ -6,9 +8,10 @@ import {
   BadRequestError,
   ConflictError,
   InternalServerError,
-} from '../helpers/apiError';
+} from '../helpers/ApiError';
 import type IUserUpdateData from '../interfaces/IUserUpdateData';
 import type ITokenService from '../interfaces/ITokenService';
+import type IConflictUser from '../interfaces/IConflictUser';
 
 class UserService implements IUserServiceClass {
   private UserRepository: IUserRepository;
@@ -21,13 +24,21 @@ class UserService implements IUserServiceClass {
 
   create = async (data: IUserCreationData): Promise<User | null> => {
     const { username, email } = data;
-    await this.checkForConflicts(username ?? '', email ?? '');
+
+    if (!username || !email) {
+      throw new BadRequestError('Username and email are required.');
+    }
+
+    await this.checkForConflicts({
+      username,
+      email,
+    });
 
     const user = await this.UserRepository.create(data);
 
     if (!user) {
       throw new InternalServerError(
-        'Não foi possível criar o usuário devido a um erro interno.',
+        'Unable to create user due to an internal error.',
       );
     }
 
@@ -38,54 +49,89 @@ class UserService implements IUserServiceClass {
     token: string,
     updateData: IUserUpdateData,
   ): Promise<User | null> => {
+    const decodedToken = this.TokenService.decodeToken(token);
+
+    if (!decodedToken) {
+      throw new BadRequestError('Invalid token.');
+    }
+
     const { username: currentUsername = '', email: currentEmail = '' } =
-      this.TokenService.decodeToken(token) as {
+      decodedToken as {
         username?: string;
         email?: string;
       };
 
-    const user = await this.UserRepository.findUserByUsernameOrEmail(
-      currentUsername,
-      currentEmail,
-    );
+    const user = await this.UserRepository.findUserByUsernameOrEmail({
+      email: currentEmail,
+      username: currentUsername,
+    });
 
     if (!user) {
-      throw new BadRequestError('Não foi possível encontrar nenhum usuário!');
+      throw new BadRequestError('Could not find any user!');
     }
 
-    const hasChanges = Object.keys(updateData).some((key) => {
-      const updateValue =
-        updateData[key as keyof IUserUpdateData] ??
-        user[key as keyof IUserUpdateData];
-      const userValue = user[key as keyof IUserUpdateData];
+    const searchChanges = async (): Promise<boolean> => {
+      for (const key of Object.keys(updateData)) {
+        const updateValue =
+          updateData[key as keyof IUserUpdateData] ??
+          user[key as keyof IUserUpdateData];
+        const userValue = user[key as keyof IUserUpdateData];
 
-      return String(updateValue).trim() !== String(userValue).trim();
-    });
+        if (key === 'password') {
+          const passwordToCheck = updateData[key as keyof IUserUpdateData];
+          if (passwordToCheck && user.password) {
+            const samePassword = await bcrypt.compare(
+              passwordToCheck,
+              user.password,
+            );
+            if (samePassword) {
+              continue;
+            }
+          }
+        }
+
+        if (String(updateValue).trim() !== String(userValue).trim()) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const hasChanges = await searchChanges();
 
     if (!hasChanges) {
       throw new BadRequestError(
-        'Nenhum campo modificado, o usuário não foi alterado.',
+        'No fields modified, user has not been changed.',
       );
     }
 
     const { username: newUsername, email: newEmail } = updateData;
 
-    await this.checkForConflicts(newUsername ?? '', newEmail ?? '');
+    await this.checkForConflicts({
+      username: newUsername ?? '',
+      email: newEmail ?? '',
+      currentUser: user,
+    });
 
     const updatedUser = await this.UserRepository.updateUser(user, updateData);
     return updatedUser;
   };
 
-  private async checkForConflicts(username: string, email: string) {
-    const conflict = await this.UserRepository.findUserByUsernameOrEmail(
+  private async checkForConflicts(
+    data: IConflictUser,
+  ): Promise<ConflictError | void> {
+    const { username, email, currentUser } = data;
+
+    const foundUser = await this.UserRepository.findUserByUsernameOrEmail({
       username,
       email,
-    );
+    });
 
-    if (conflict) {
-      const errorMessage = conflict.username
-        ? 'O nome de usuário já está em uso!'
-        : 'O e-mail já está em uso!';
+    if (foundUser && (!currentUser || currentUser.id !== foundUser.id)) {
+      const errorMessage =
+        foundUser.username === username
+          ? 'The username is already in use!'
+          : 'The email is already in use!';
       throw new ConflictError(errorMessage);
     }
   }

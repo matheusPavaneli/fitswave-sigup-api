@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../helpers/apiError';
+import { ApiError } from '../helpers/ApiError';
 
 export const errorHandler = (
   error: Error & Partial<ApiError>,
