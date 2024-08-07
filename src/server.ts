@@ -8,6 +8,6 @@ app.on('db ready', () => {
   app.listen(PORT, () => {
     console.log('');
     console.log(`Im listening to port ${PORT}`);
-    console.log(`To acess, use: http://localhost:${PORT}`);
+    console.log(`To access, use: http://localhost:${PORT}`);
   });
 });

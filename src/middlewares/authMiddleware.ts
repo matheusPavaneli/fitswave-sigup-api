@@ -15,13 +15,13 @@ const authMiddleware = (
   const token = req.headers['authorization'] ?? '';
 
   if (!token) {
-    new ForbiddenError('Nenhum token encontrado.');
+    new ForbiddenError('No tokens found.');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   jwt.verify(token, SECRET!, (err, _decoded) => {
     if (err) {
-      throw new UnauthorizedError('Falha na autenticação.');
+      throw new UnauthorizedError('Authentication failed.');
     }
 
     next();

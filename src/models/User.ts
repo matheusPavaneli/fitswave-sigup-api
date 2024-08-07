@@ -1,8 +1,9 @@
-import { DataTypes, Model } from 'sequelize';
-import bcrypt from 'bcryptjs';
-import sequelize from '../config/sequelizeConfig';
-import UserAttributes from '../interfaces/IUserAttributes';
-import UserCreationAttributes from '../interfaces/IUserModel';
+import { DataTypes, Model } from "sequelize";
+import bcrypt from "bcryptjs";
+import sequelize from "../config/sequelizeConfig";
+import UserAttributes from "../interfaces/IUserAttributes";
+import UserCreationAttributes from "../interfaces/IUserModel";
+import type IModels from "../interfaces/IModels";
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
@@ -14,10 +15,17 @@ class User
   public password!: string;
 
   public comparePassword = async (
-    candidatePassword: string,
+    candidatePassword: string
   ): Promise<boolean> => {
     return await bcrypt.compare(candidatePassword, this.password);
   };
+
+  static associate(models: IModels): void {
+    User.hasOne(models.User2FA, {
+      foreignKey: "userId",
+      as: "user2fa",
+    });
+  }
 }
 
 User.init(
@@ -30,8 +38,8 @@ User.init(
     username: {
       type: DataTypes.STRING(50),
       unique: {
-        name: 'unique_username',
-        msg: 'Esse usuário já está registrado em nosso banco de dados',
+        name: "unique_username",
+        msg: "This user is already registered in our database",
       },
       allowNull: false,
     },
@@ -39,8 +47,8 @@ User.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: {
-        name: 'unique_email',
-        msg: 'Esse email já está registrado em nosso banco de dados',
+        name: "unique_email",
+        msg: "This email is already registered in our database",
       },
     },
     password: {
@@ -51,19 +59,19 @@ User.init(
   {
     hooks: {
       beforeSave: async (user: User): Promise<void> => {
-        if (user.changed('password')) {
+        if (user.changed("password")) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
         }
       },
     },
     sequelize,
-    modelName: 'User',
-    tableName: 'users',
+    modelName: "User",
+    tableName: "users",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }
 );
 
 export default User;
