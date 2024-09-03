@@ -41,7 +41,6 @@ class OAuthService implements IOAuthService {
         email: profile.emails?.[0].value || "",
       };
 
-      console.log(user);
       return done(null, user);
     } catch (error) {
       return done(error, false);
