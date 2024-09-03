@@ -1,16 +1,17 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/sequelizeConfig";
-import type IUser2FAAttribute from "../interfaces/IUser2FAAttributes";
-import type User2FACreation from "../interfaces/IUser2FAModel";
+import type ITwoFactorAttribute from "../interfaces/ITwoFactorAttributes";
+import type TwoFactorCreation from "../interfaces/ITwoFactorModel";
 import type IModels from "../interfaces/IModels";
 
 class User2FA
-  extends Model<IUser2FAAttribute, User2FACreation>
-  implements IUser2FAAttribute
+  extends Model<ITwoFactorAttribute, TwoFactorCreation>
+  implements ITwoFactorAttribute
 {
   public id!: number;
   public userId!: number;
   public is2FAEnabled!: boolean;
+  public secret32!: string;
 
   static associate(models: IModels): void {
     User2FA.belongsTo(models.User, {
@@ -44,6 +45,11 @@ User2FA.init(
       allowNull: false,
       defaultValue: false,
     },
+    secret32: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: ""
+    }
   },
   {
     sequelize,

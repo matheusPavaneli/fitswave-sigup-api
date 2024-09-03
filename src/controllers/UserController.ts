@@ -1,24 +1,28 @@
 import { Request, Response } from "express";
 
 import IUserServiceClass from "../interfaces/IUserServiceClass";
-import { UnprocessableEntityError } from "../helpers/ApiError";
+import { NotFoundError, UnprocessableEntityError } from "../helpers/ApiError";
 import IUserResponse from "../interfaces/IUserResponse";
 import type ITokenService from "../interfaces/ITokenService";
-import type IUser2FAService from "../interfaces/IUser2FAService";
+import type IUser2FAService from "../interfaces/ITwoFactorService";
+import type ITwoFactorRepository from "../interfaces/ITwoFactorRepository";
 
 class UserController {
   private UserService: IUserServiceClass;
   private TokenService: ITokenService;
   private User2FAService: IUser2FAService;
+  private User2FARepository: ITwoFactorRepository;
 
   constructor(
     UserService: IUserServiceClass,
     TokenService: ITokenService,
-    User2FAService: IUser2FAService
+    User2FAService: IUser2FAService,
+    User2FARepository: ITwoFactorRepository
   ) {
     this.UserService = UserService;
     this.TokenService = TokenService;
     this.User2FAService = User2FAService;
+    this.User2FARepository = User2FARepository;
   }
 
   createUser = async (req: Request, res: Response) => {
@@ -39,10 +43,6 @@ class UserController {
         "Due to an internal error, registration was not possible."
       );
     }
-
-    const { id }: { id: number } = newUser;
-
-    await this.User2FAService.create(id);
 
     const responseData: IUserResponse = {
       status: "success",
@@ -71,7 +71,28 @@ class UserController {
     });
 
     if (updatedUser) {
-      const token = this.TokenService.getLoginToken(updatedUser);
+      const {
+        id,
+        username,
+        email,
+      }: { id: number; username: string; email: string } = updatedUser;
+
+      const user2FA = await this.User2FARepository.findUser2FAByUserId(id);
+
+      if (!user2FA) {
+        throw new NotFoundError(
+          "Unable to find two-factor verification status"
+        );
+      }
+
+      const { is2FAEnabled } = user2FA;
+
+      const token = this.TokenService.getLoginToken(
+        id,
+        username,
+        email,
+        is2FAEnabled
+      );
       res.set("authorization", token);
     }
 

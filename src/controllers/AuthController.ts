@@ -1,38 +1,43 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
-import IAuthService from '../interfaces/IAuthService';
-import IUserResponse from '../interfaces/IUserResponse';
-import ITokenService from '../interfaces/ITokenService';
+import IAuthService from "../interfaces/IAuthService";
+import IUserResponse from "../interfaces/IUserResponse";
+import ITokenService from "../interfaces/ITokenService";
 import {
   BadRequestError,
   ConflictError,
   InternalServerError,
-} from '../helpers/ApiError';
-import type IMailService from '../interfaces/IMailService';
+  NotFoundError,
+} from "../helpers/ApiError";
+import type IMailService from "../interfaces/IMailService";
+import type ITwoFactorRepository from "../interfaces/ITwoFactorRepository";
 
 class AuthController {
   private AuthService: IAuthService;
   private TokenService: ITokenService;
   private MailService: IMailService;
+  private User2FARepository: ITwoFactorRepository;
 
   constructor(
     AuthService: IAuthService,
     TokenService: ITokenService,
     MailService: IMailService,
+    User2FARepository: ITwoFactorRepository
   ) {
     this.AuthService = AuthService;
     this.TokenService = TokenService;
     this.MailService = MailService;
+    this.User2FARepository = User2FARepository;
   }
 
   authenticate = async (req: Request, res: Response): Promise<Response> => {
     const { identifier, password }: { identifier: string; password: string } =
       req.body;
 
-    const alreadyAuthenticated = req.headers['authorization'];
+    const alreadyAuthenticated = req.headers["authorization"];
 
     if (alreadyAuthenticated) {
-      throw new ConflictError('You are now authenticated!');
+      throw new ConflictError("You are now authenticated!");
     }
 
     const user = await this.AuthService.authenticate({
@@ -41,30 +46,48 @@ class AuthController {
     });
 
     const responseData: IUserResponse = {
-      status: 'success',
+      status: "success",
       data: {
         statusCode: 200,
-        message: 'You have successfully authenticated!',
+        message: "You have successfully authenticated!",
         user: user,
       },
     };
 
     if (user) {
-      const token = this.TokenService.getLoginToken(user);
-      res.set('authorization', token);
+      const { id, username, email } = user;
+
+      const user2FA = await this.User2FARepository.findUser2FAByUserId(id);
+
+      if (!user2FA) {
+        throw new NotFoundError(
+          "Unable to find two-factor verification status"
+        );
+      }
+
+      const { is2FAEnabled } = user2FA;
+
+      const token = this.TokenService.getLoginToken(
+        id,
+        username,
+        email,
+        is2FAEnabled
+      );
+
+      res.set("authorization", token);
     }
 
     return res.status(200).json(responseData);
   };
 
   logout = async (req: Request, res: Response) => {
-    res.removeHeader('authorization');
+    res.removeHeader("authorization");
 
     const responseData: IUserResponse = {
-      status: 'success',
+      status: "success",
       data: {
         statusCode: 200,
-        message: 'You have successfully logged out!',
+        message: "You have successfully logged out!",
       },
     };
 
@@ -73,23 +96,23 @@ class AuthController {
 
   requestPasswordReset = async (
     req: Request,
-    res: Response,
+    res: Response
   ): Promise<Response> => {
     const { email }: { email: string } = req.body;
 
     const token = this.TokenService.getResetPasswordToken(email);
 
     if (!token) {
-      throw new InternalServerError('Unable to create a recovery token.');
+      throw new NotFoundError("Unable to create a recovery token.");
     }
 
     await this.MailService.sendMailResetPassword(email, token);
 
     const responseData: IUserResponse = {
-      status: 'success',
+      status: "success",
       data: {
         statusCode: 200,
-        message: 'If this email exists, we will send a recovery email!',
+        message: "If this email exists, we will send a recovery email!",
       },
     };
 
@@ -101,7 +124,7 @@ class AuthController {
     const { token } = req.query as { token: string };
 
     if (!token) {
-      throw new BadRequestError('No tokens found');
+      throw new BadRequestError("No tokens found");
     }
 
     const decodedToken = decodeURIComponent(token);
@@ -112,7 +135,7 @@ class AuthController {
 
     if (!email) {
       throw new InternalServerError(
-        'An error occurred while trying to locate the email',
+        "An error occurred while trying to locate the email"
       );
     }
 
@@ -120,15 +143,15 @@ class AuthController {
 
     if (!user) {
       throw new InternalServerError(
-        'An error occurred when trying to update your password',
+        "An error occurred when trying to update your password"
       );
     }
 
     const responseData: IUserResponse = {
-      status: 'success',
+      status: "success",
       data: {
         statusCode: 200,
-        message: 'Your password has been changed successfully!',
+        message: "Your password has been changed successfully!",
       },
     };
 

@@ -1,21 +1,27 @@
-import * as jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import * as jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 dotenv.config();
 
 const { SECRET } = process.env;
 
-import ITokenService from '../interfaces/ITokenService';
-import User from '../models/User';
+import ITokenService from "../interfaces/ITokenService";
+import User from "../models/User";
 
 class TokenService implements ITokenService {
-  getLoginToken = (data: User): string => {
-    const { username, email } = data;
-
-    return jwt.sign({ username, email }, SECRET ?? 'default');
+  getLoginToken = (
+    id: number,
+    username: string,
+    email: string,
+    twoFactorStatus: boolean
+  ): string => {
+    return jwt.sign(
+      { id, username, email, twoFactorStatus },
+      SECRET ?? "default"
+    );
   };
 
   getResetPasswordToken = (email: string): string => {
-    return jwt.sign({ email }, SECRET ?? 'default', { expiresIn: '30m' });
+    return jwt.sign({ email }, SECRET ?? "default", { expiresIn: "30m" });
   };
 
   decodeToken = (token: string): string | jwt.JwtPayload | null => {
