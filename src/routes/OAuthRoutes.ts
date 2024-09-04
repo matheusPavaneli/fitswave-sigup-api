@@ -9,6 +9,8 @@ import User2FA from "../models/User2FA";
 import passport from "passport";
 import OAuthController from "../controllers/OAuthController";
 import OAuthService from "../services/OAuthService";
+import authMiddleware from "../middlewares/authMiddleware";
+import verifyTwoFactor from "../middlewares/verifyTwoFactor";
 
 const { OAUTH_CLIENTID, OAUTH_CLIENTSECRET } = process.env;
 const router = Router();
@@ -31,6 +33,8 @@ router.get("/", passport.authenticate("google", { scope: ["profile"] }));
 router.post(
   "/callback",
   passport.authenticate("google", { session: false, failureRedirect: "/" }),
+  authMiddleware,
+  verifyTwoFactor,
   oAuthController.authenticateCallbackURL
 );
 

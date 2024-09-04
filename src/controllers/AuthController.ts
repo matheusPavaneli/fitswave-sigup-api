@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, response, Response, type NextFunction } from "express";
 
 import IAuthService from "../interfaces/IAuthService";
 import IUserResponse from "../interfaces/IUserResponse";
@@ -30,7 +30,11 @@ class AuthController {
     this.User2FARepository = User2FARepository;
   }
 
-  authenticate = async (req: Request, res: Response): Promise<Response> => {
+  authenticate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     const { identifier, password }: { identifier: string; password: string } =
       req.body;
 
@@ -53,6 +57,8 @@ class AuthController {
         user: user,
       },
     };
+
+    res.locals.responseData = responseData;
 
     if (user) {
       const { id, username, email } = user;
@@ -77,7 +83,7 @@ class AuthController {
       res.set("authorization", token);
     }
 
-    return res.status(200).json(responseData);
+    return next();
   };
 
   logout = async (req: Request, res: Response) => {

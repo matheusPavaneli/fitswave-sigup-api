@@ -12,6 +12,7 @@ import MailService from "../services/MailService";
 import transporter from "../config/emailTransporter";
 import TwoFactorRepository from "../repositories/TwoFactorRepository";
 import User2FA from "../models/User2FA";
+import verifyTwoFactor from "../middlewares/verifyTwoFactor";
 
 const router = Router();
 
@@ -30,7 +31,8 @@ const authController = new AuthController(
 router.post(
   "/signin",
   validateData(Validation.userLoginSchema),
-  authController.authenticate
+  authController.authenticate,
+  verifyTwoFactor
 );
 
 router.post("/logout", authMiddleware, authController.logout);

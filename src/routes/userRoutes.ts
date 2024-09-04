@@ -12,6 +12,8 @@ import User2FAService from "../services/TwoFactorService";
 import User2FA from "../models/User2FA";
 import User2FARepository from "../repositories/TwoFactorRepository";
 import SpeakeasyService from "../services/SpeakeasyService";
+import verifyTwoFactor from "../middlewares/verifyTwoFactor";
+import authMiddleware from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -32,7 +34,7 @@ const userController = new UserController(
   userService,
   tokenService,
   user2FAService,
-  user2FARepository,
+  user2FARepository
 );
 
 router.post(
@@ -43,6 +45,8 @@ router.post(
 
 router.post(
   "/update",
+  authMiddleware,
+  verifyTwoFactor,
   validateData(Validation.userUpdateSchema),
   userController.updateUser
 );

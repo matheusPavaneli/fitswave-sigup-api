@@ -3,11 +3,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from "../helpers/ApiError";
+import { ForbiddenError, NotFoundError } from "../helpers/ApiError";
 
 const { SECRET } = process.env;
 
@@ -15,12 +11,8 @@ const verifyTwoFactor = (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): void | Response => {
   const { verifyCode } = req.body;
-
-  if (!verifyCode) {
-    throw new NotFoundError("No verify code found.");
-  }
 
   const authHeader = req.headers["authorization"];
   if (!authHeader) {
@@ -28,16 +20,17 @@ const verifyTwoFactor = (
   }
 
   const token = authHeader.split(" ")[1];
+
   if (!token) {
     throw new NotFoundError("No token found.");
   }
 
-  const { is2FAEnabled } = jwt.verify(token, SECRET ?? "default") as {
-    is2FAEnabled?: boolean;
+  const { twoFactorStatus } = jwt.verify(token, SECRET ?? "default") as {
+    twoFactorStatus?: boolean;
   };
 
-  if (is2FAEnabled) {
-    throw new ForbiddenError("2FA verification required");
+  if (!verifyCode && twoFactorStatus) {
+    throw new ForbiddenError("No verify code found.");
   }
 
   next();
