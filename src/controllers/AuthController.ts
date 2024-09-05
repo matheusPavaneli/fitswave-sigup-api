@@ -11,23 +11,24 @@ import {
 } from "../helpers/ApiError";
 import type IMailService from "../interfaces/IMailService";
 import type ITwoFactorRepository from "../interfaces/ITwoFactorRepository";
+import type ITwoFactorService from "../interfaces/ITwoFactorService";
 
 class AuthController {
   private AuthService: IAuthService;
   private TokenService: ITokenService;
   private MailService: IMailService;
-  private User2FARepository: ITwoFactorRepository;
+  private TwoFactorService: ITwoFactorService;
 
   constructor(
     AuthService: IAuthService,
     TokenService: ITokenService,
     MailService: IMailService,
-    User2FARepository: ITwoFactorRepository
+    TwoFactorService: ITwoFactorService
   ) {
     this.AuthService = AuthService;
     this.TokenService = TokenService;
     this.MailService = MailService;
-    this.User2FARepository = User2FARepository;
+    this.TwoFactorService = TwoFactorService;
   }
 
   authenticate = async (
@@ -63,7 +64,7 @@ class AuthController {
     if (user) {
       const { id, username, email } = user;
 
-      const user2FA = await this.User2FARepository.findUser2FAByUserId(id);
+      const user2FA = await this.TwoFactorService.setup(id);
 
       if (!user2FA) {
         throw new NotFoundError(

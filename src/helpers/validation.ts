@@ -51,15 +51,13 @@ class Validation {
   });
 
   static userUpdateSchema = Joi.object({
-    username: Joi.string().alphanum().min(3).max(30).required(),
-    email: Joi.string().email().required(),
-    password: Joi.string()
-      .pattern(
-        new RegExp(
-          "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
-        )
+    username: Joi.string().alphanum().min(3).max(30),
+    email: Joi.string().email(),
+    password: Joi.string().pattern(
+      new RegExp(
+        "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
       )
-      .required(),
+    ),
   }).messages({
     "string.empty": "The {{#label}} field cannot be empty",
     "string.min": "The {{#label}} field must have at least {#limit} characters",
