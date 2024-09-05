@@ -161,7 +161,7 @@ npm start
         "message": "You have successfully authenticated!",
         "user": user,
       },
-    };
+    }
 ```
 
 ### **POST** `/auth/logout`
@@ -196,7 +196,7 @@ npm start
         "statusCode": 200,
         "message": "If this email exists, we will send a recovery email!",
       },
-};
+}
 ```
 
 ### **POST** `/auth/reset-password`
@@ -216,7 +216,7 @@ npm start
         "statusCode": 200,
         "message": "Your password has been changed successfully!",
       },
-    };
+    }
 ```
 
 ### **POST** `/2fa/setup`
@@ -232,7 +232,7 @@ npm start
         "statusCode": 200,
         "data": qrCodeUrl,
       },
-};
+}
 ```
 
 ### **POST** `/2fa/activate`
@@ -280,7 +280,7 @@ npm start
         "statusCode": 200,
         "message": "You have been successfully verified!",
       },
-};
+}
 ```
 
 ### **POST** `/auth/google`
@@ -303,7 +303,7 @@ npm start
         "statusCode": 200,
         "message": "You have successfully authenticated!",
       },
-};
+}
 ```
 
 ## Authentication
